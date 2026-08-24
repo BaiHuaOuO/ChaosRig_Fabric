@@ -1,0 +1,22 @@
+subprojects {
+	apply plugin: 'java'
+
+	tasks.withType(JavaCompile).configureEach {
+		it.options.release = 21
+	}
+
+	java {
+		withSourcesJar()
+		sourceCompatibility = JavaVersion.VERSION_21
+		targetCompatibility = JavaVersion.VERSION_21
+	}
+
+	jar {
+		def projectName = project.name
+		inputs.property "projectName", projectName
+
+		from("LICENSE") {
+			rename { "${it}_$projectName"}
+		}
+	}
+}

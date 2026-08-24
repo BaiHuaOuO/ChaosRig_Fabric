@@ -1,0 +1,105 @@
+{
+  "targets": [
+    "swap"
+  ],
+  "passes": [
+    {
+      "name": "vhs_program",
+      "intarget": "minecraft:main",
+      "outtarget": "swap",
+      "auxtargets": [
+        {
+          "name": "DepthSampler",
+          "id": "minecraft:main:depth"
+        }
+      ],
+      "uniforms": [
+        {
+          "name": "GameTime",
+          "values": [ 0.0 ]
+        },
+        {
+          "name": "BarrelAmount",
+          "values": [ 0.055 ]
+        },
+        {
+          "name": "ChromaAberration",
+          "values": [ 0.018 ]
+        },
+        {
+          "name": "ChromaEdge",
+          "values": [ 0.14 ]
+        },
+        {
+          "name": "ChromaSmear",
+          "values": [ 0.0009 ]
+        },
+        {
+          "name": "TrackSpeed",
+          "values": [ 0.40 ]
+        },
+        {
+          "name": "TrackWidth",
+          "values": [ 0.07 ]
+        },
+        {
+          "name": "TrackJitter",
+          "values": [ 0.0020 ]
+        },
+        {
+          "name": "TrackBright",
+          "values": [ 0.0 ]
+        },
+        {
+          "name": "FlickerAmount",
+          "values": [ 0.035 ]
+        },
+        {
+          "name": "ScanlineStrength",
+          "values": [ 0.10 ]
+        },
+        {
+          "name": "GrainStrength",
+          "values": [ 0.035 ]
+        },
+        {
+          "name": "VignetteStrength",
+          "values": [ 0.18 ]
+        },
+        {
+          "name": "OffsetIntensity",
+          "values": [ 0.0 ]
+        },
+        {
+          "name": "NoiseIntensity",
+          "values": [ 0.0008 ]
+        },
+        {
+          "name": "BlurNear",
+          "values": [ 0.9985 ]
+        },
+        {
+          "name": "BlurFar",
+          "values": [ 0.9999 ]
+        },
+        {
+          "name": "BlurRadius",
+          "values": [ 0.004 ]
+        },
+        {
+          "name": "BlurSamples",
+          "values": [ 8.0 ]
+        },
+        {
+          "name": "MaxColorBlur",
+          "values": [ 0.85 ]
+        }
+      ]
+    },
+    {
+      "name": "blit",
+      "intarget": "swap",
+      "outtarget": "minecraft:main"
+    }
+  ]
+}

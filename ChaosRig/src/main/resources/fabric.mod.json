@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "chaos_rig",
+	"version": "${version}",
+	"name": "Chaos Rig",
+	"description": "",
+	"authors": ["HexCat"],
+	"license": "GNU GPLv3",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"dev.chaosrig.ChaosRig"
+		],
+		"client": [
+			"dev.chaosrig.ChaosRigClient"
+		],
+		"fabric-datagen": [
+			"dev.chaosrig.ChaosRigDataGenerator"
+		]
+	},
+	"mixins": [
+	],
+	"depends": {
+		"fabricloader": ">=0.19.2",
+		"minecraft": "~1.20.1",
+		"chaos_rig_api": ">=1.0.0",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}

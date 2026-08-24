@@ -1,0 +1,4 @@
+accessWidener v2 named
+
+# 我也不知道为什么这18码玩意会变成protected, 反正linkie上面是public
+accessible class net/minecraft/client/gui/EditBox$Substring
