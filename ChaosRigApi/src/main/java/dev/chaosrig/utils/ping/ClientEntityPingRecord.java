@@ -1,10 +1,7 @@
 package dev.chaosrig.utils.ping;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.chaosrig.utils.ColorTools;
-import dev.chaosrig.utils.renderer.InformationScreen;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
@@ -86,9 +83,7 @@ public class ClientEntityPingRecord extends ClientPingRecord {
         RenderSystem.setShader(GameRenderer::getPositionColorProgram);
         BufferBuilder buffer = Tessellator.getInstance().getBuffer();
         buffer.begin(VertexFormat.DrawMode.DEBUG_LINE_STRIP, VertexFormats.POSITION_COLOR);
-        float alpha = Math.min(this.getRenderAlpha(), maxTick >= MAX_RENDER_PROGRESS
-                ? MathHelper.clamp(this.tick / 10f, 0, 1) - MathHelper.clamp((this.tick - maxTick + 20) / 10f, 0, 1)
-                : MathHelper.clamp(this.renderProgress / 10f, 0, 1) - MathHelper.clamp((this.renderProgress - 50) / 10f, 0, 1));
+        float alpha = this.getAlpha();
         for (int i = 0; i <= segments; i++) {
             double angle = 2 * Math.PI * i / segments + Math.toRadians(startAngle);
             for (double j = 0; j < coarse; j += 0.01) {

@@ -1,35 +1,42 @@
 package dev.chaosrig.utils.ping;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import dev.chaosrig.utils.ColorTools;
-import dev.chaosrig.utils.renderer.InformationScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.Frustum;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.profiler.Profiler;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Matrix4f;
-import org.joml.Vector4f;
 
 @Environment(EnvType.CLIENT)
 public abstract class ClientPingRecord extends PingRecord {
+    public final int MAX_RENDER_PROGRESS = 60;
     protected int renderProgress = 0;
     protected float renderAlpha = 1f;
 
+    public static void copy(ClientPingRecord from, ClientPingRecord to) {
+        PingRecord.copy(from, to);
+        to.renderProgress = from.renderProgress;
+        to.renderAlpha = from.renderAlpha;
+    }
+
     public ClientPingRecord(@NotNull Type type, @NotNull LivingEntity owner, @NotNull HitResult hitResult, int maxTick) {
         super(type, owner, hitResult, maxTick);
+    }
+
+    public float getAlpha() {
+        return Math.min(this.getRenderAlpha(), maxTick >= MAX_RENDER_PROGRESS
+                ? MathHelper.clamp(this.tick / 10f, 0, 1) - MathHelper.clamp((this.tick - maxTick + 20) / 10f, 0, 1)
+                : MathHelper.clamp(this.renderProgress / 10f, 0, 1) - MathHelper.clamp((this.renderProgress - 50) / 10f, 0, 1));
     }
 
     public void render(@NotNull WorldRenderContext context) {

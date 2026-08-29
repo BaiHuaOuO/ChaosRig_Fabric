@@ -87,7 +87,7 @@ public abstract class BaseButton extends ClickableWidget implements SelectableSc
     public void tick(SelectableScreen instance) {
         if (this.hovered || this.isFocused()) {
             if (this.description != null && instance.descriptionRenderer != null) {
-                instance.descriptionRenderer.push(lock ? Text.of(this.description.getString() + " (已锁定)") : this.description);
+                instance.descriptionRenderer.push(() -> lock ? Text.of(this.description.getString() + " (已锁定)") : this.description);
             }
         }
     }

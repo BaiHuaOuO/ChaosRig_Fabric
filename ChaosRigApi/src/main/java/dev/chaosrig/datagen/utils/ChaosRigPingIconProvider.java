@@ -3,7 +3,6 @@ package dev.chaosrig.datagen.utils;
 import com.google.gson.JsonObject;
 import dev.chaosrig.utils.ping.PingIconLoader;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.data.DataOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.DataWriter;

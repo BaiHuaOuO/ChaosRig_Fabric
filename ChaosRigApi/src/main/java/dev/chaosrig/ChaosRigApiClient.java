@@ -9,7 +9,6 @@ import dev.chaosrig.utils.data.InteractionManager;
 import dev.chaosrig.utils.ping.PingRenderer;
 import dev.chaosrig.utils.registry.ItemGuiRendererRegistry;
 import dev.chaosrig.utils.renderer.InformationScreen;
-import dev.chaosrig.utils.renderer.PostShaders;
 import dev.chaosrig.utils.renderer.OutlineRenderer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
@@ -63,12 +62,13 @@ public final class ChaosRigApiClient implements ClientModInitializer {
         clientInteractionManager.addConsumer(PingRenderer.getInstance());
         ResourceHelper.register();
         PingRenderer.register();
-        InformationScreen.register();
         ClientChaosRigApiConfig.register();
         ReceiveSyncAnnotation.register();
         OutlineRenderer.register();
         KeyboardInput.register();
-        PostShaders.register();
+        if (ChaosRigApi.isDebug()) {
+            InformationScreen.register();
+        }
     }
 
     /**

@@ -1,0 +1,5 @@
+{
+  "chaosrig.api.ping.camera.tip": "No allow to ping in Free Camera mode.",
+  "chaosrig.api.ping.nothing": "No anything can be pinged or too far away.",
+  "key.chaosrig.api.ping": "Ping"
+}

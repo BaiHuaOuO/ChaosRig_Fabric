@@ -4,23 +4,37 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.chaosrig.ChaosRigApi;
+import dev.chaosrig.ChaosRigClient;
+import dev.chaosrig.utils.renderer.InformationScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.registry.Registries;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Objects;
 
 @Environment(EnvType.CLIENT)
 public class TooltipReader {
     public static final String FILE_NAME = "tooltips";
-    public static final Identifier FILE_PATH = Identifier.of(ChaosRigApi.MAIN_MOD_ID, FILE_NAME + ".json");
+    public static final Identifier FILE_PATH = Objects.requireNonNull(Identifier.of(ChaosRigApi.MAIN_MOD_ID, FILE_NAME + ".json"));
     public static final Text UNDEFINE_TEXT = Text.of("undefine");
+    @Nullable
+    public static JsonArray root = null;
+
+    public static void register() {
+        if (ChaosRigClient.isInit()) {
+            throw new RuntimeException("不允许重复注册");
+        }
+        ResourceHelper.CLIENT_RESOURCE_RELOAD_EVENT.register(TooltipReader::init);
+    }
 
     @NotNull
     public static Text[] read(@NotNull Item item) {
@@ -73,13 +87,11 @@ public class TooltipReader {
 
     @Nullable
     protected static JsonObject getJson(@NotNull Item item) {
-        BufferedReader reader = ResourceHelper.getReader(FILE_PATH).orElse(null);
-        if (reader == null) {
+        if (root == null) {
             return null;
         }
-        JsonArray array = JsonParser.parseReader(reader).getAsJsonArray();
-        for (int i = 0; i < array.size(); i++) {
-            JsonObject object = array.get(i).getAsJsonObject();
+        for (int i = 0; i < root.size(); i++) {
+            JsonObject object = root.get(i).getAsJsonObject();
             if (!object.has("item")) {
                 continue;
             }
@@ -88,5 +100,16 @@ public class TooltipReader {
             }
         }
         return null;
+    }
+
+    protected static void init(ResourceManager manager) {
+        try (BufferedReader reader = ResourceHelper.getReader(manager, FILE_PATH).orElse(null)) {
+            if (reader == null) {
+                return;
+            }
+            root = JsonParser.parseReader(reader).getAsJsonArray();
+        } catch(IOException e) {
+            ChaosRigApi.LOGGER.warn("无法加载BufferedReader: ", e);
+        }
     }
 }

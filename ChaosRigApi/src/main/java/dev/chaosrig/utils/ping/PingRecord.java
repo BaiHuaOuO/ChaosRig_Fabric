@@ -6,6 +6,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
@@ -114,7 +115,8 @@ public class PingRecord {
     public enum Type {
         ENTITY,
         LOCATION,
-        BLOCK;
+        BLOCK,
+        REGROUP;
     }
 
     public enum Relationship {
@@ -161,6 +163,10 @@ public class PingRecord {
 
     public static class BlockPingRecord extends PingRecord {
 
+        public BlockPingRecord(@NotNull LivingEntity owner, @NotNull BlockHitResult hitResult, int maxTick) {
+            super(Type.BLOCK, owner, hitResult, maxTick);
+        }
+
         public BlockPingRecord(@NotNull LivingEntity owner, @NotNull BlockHitResult hitResult) {
             super(Type.BLOCK, owner, hitResult, ServerChaosRigApiConfig.pingBlockAliveMaxTick);
         }
@@ -181,6 +187,22 @@ public class PingRecord {
                 this.setCancel();
                 return;
             }
+        }
+    }
+
+    public static class RegroupPingRecord extends PingRecord {
+
+        public RegroupPingRecord(@NotNull LivingEntity owner, int maxTick) {
+            super(Type.REGROUP, owner, new BlockHitResult(owner.getPos(), Direction.UP, owner.getBlockPos(), false), maxTick);
+        }
+
+        public RegroupPingRecord(@NotNull LivingEntity owner) {
+            super(Type.REGROUP, owner, new BlockHitResult(owner.getPos(), Direction.UP, owner.getBlockPos(), false), ServerChaosRigApiConfig.pingRegroupAliveMaxTick);
+        }
+
+        @Override
+        public @NotNull Vec3d getPos() {
+            return ((BlockHitResult) this.hitResult).getBlockPos().toCenterPos();
         }
     }
 }

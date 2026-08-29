@@ -19,6 +19,7 @@ public final class ChaosRigApi implements ModInitializer {
     public static final String API_MOD_ID = "chaos_rig_api";
     public static final String MAIN_MOD_ID = "chaos_rig";
     public static final Logger LOGGER = LoggerFactory.getLogger(API_MOD_ID);
+    private static boolean debug = false;
     private static boolean mainModExist = false;
     private static boolean init = false;
 
@@ -26,6 +27,7 @@ public final class ChaosRigApi implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        debug = FabricLoader.getInstance().isDevelopmentEnvironment();
         LOGGER.info("ChaosRig[Api] init...");
         register();
         registerReceiver();
@@ -33,6 +35,10 @@ public final class ChaosRigApi implements ModInitializer {
             mainModExist = true;
         }
         init = true;
+    }
+
+    public static boolean isDebug() {
+        return debug;
     }
 
     private static void registerReceiver() {

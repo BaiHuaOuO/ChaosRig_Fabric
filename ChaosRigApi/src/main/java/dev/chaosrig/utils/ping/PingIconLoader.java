@@ -7,7 +7,6 @@ import dev.chaosrig.ChaosRigApi;
 import dev.chaosrig.utils.ResourceHelper;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;

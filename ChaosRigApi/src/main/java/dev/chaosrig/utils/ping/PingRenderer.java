@@ -3,6 +3,7 @@ package dev.chaosrig.utils.ping;
 import dev.chaosrig.ChaosRigApi;
 import dev.chaosrig.ChaosRigApiClient;
 import dev.chaosrig.utils.ColorTools;
+import dev.chaosrig.utils.KeyboardInput;
 import dev.chaosrig.utils.PacketList;
 import dev.chaosrig.utils.Vec3dHelper;
 import dev.chaosrig.utils.config.ClientChaosRigApiConfig;
@@ -19,6 +20,7 @@ import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.PacketSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.Camera;
@@ -35,6 +37,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -98,6 +101,9 @@ public class PingRenderer extends DataConsumer {
             return switch (type) {
                 case ENTITY -> {
                     UUID target = packetBuf.readUuid();
+                    if (sender.getUuid().equals(target)) {
+                        yield null;
+                    }
                     for (Entity entity : world.getEntities()) {
                         if (entity.getUuid().equals(target)) {
                             ClientPingRecord ping = new ClientEntityPingRecord(player, new EntityHitResult(entity), maxTick);
@@ -106,6 +112,16 @@ public class PingRenderer extends DataConsumer {
                         }
                     }
                     yield null;
+                }
+                case BLOCK -> {
+                    ClientPingRecord ping = new ClientBlockPingRecord(player, packetBuf.readBlockHitResult(), maxTick);
+                    ping.tick = tick;
+                    yield ping;
+                }
+                case REGROUP -> {
+                    ClientPingRecord ping = new ClientRegroupPingRecord(player, maxTick);
+                    ping.tick = tick;
+                    yield ping;
                 }
                 default -> {
                     ClientPingRecord ping = new ClientPlacePingRecord(player, packetBuf.readBlockHitResult(), maxTick);
@@ -117,11 +133,14 @@ public class PingRenderer extends DataConsumer {
         INSTANCE.pings.removeIf(p -> !tmpPings.contains(p));
         // update
         for (ClientPingRecord tmpPing : tmpPings) {
+            if (tmpPing == null) {
+                continue;
+            }
             if (!INSTANCE.pings.contains(tmpPing)) {
                 INSTANCE.pings.add(tmpPing);
             } else {
                 INSTANCE.pings.stream().filter(p -> p.equals(tmpPing)).forEach(p -> {
-                    PingRecord.copy(tmpPing, p);
+                    ClientPingRecord.copy(tmpPing, p);
                 });
             }
         }
@@ -138,10 +157,9 @@ public class PingRenderer extends DataConsumer {
         }
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeEnumSet(EnumSet.of(ping.type), PingRecord.Type.class);
-        if (ping.type == PingRecord.Type.ENTITY) {
-             buf.writeUuid(((EntityHitResult) ping.hitResult).getEntity().getUuid());
-        } else {
-            buf.writeBlockHitResult((BlockHitResult) ping.hitResult);
+        switch (ping.type) {
+            case ENTITY -> buf.writeUuid(((EntityHitResult) ping.hitResult).getEntity().getUuid());
+            case BLOCK, LOCATION -> buf.writeBlockHitResult((BlockHitResult) ping.hitResult);
         }
         ClientPlayNetworking.send(PacketList.CLIENT_PING, buf);
     }
@@ -203,7 +221,7 @@ public class PingRenderer extends DataConsumer {
             return false;
         }
         if (!new Box(MinecraftClient.getInstance().gameRenderer.getCamera().getBlockPos()).expand(1).intersects(player.getBoundingBox())) {
-            player.sendMessage(Text.translatable("craftus.ping.camera.tip"), false);
+            player.sendMessage(Text.translatable("chaosrig.api.ping.camera.tip"), false);
             return false;
         }
         HitResult result = Vec3dHelper.getHitResult(player, MinecraftClient.getInstance().getTickDelta(), ClientChaosRigApiConfig.pingMaxDistance, false);
@@ -211,7 +229,7 @@ public class PingRenderer extends DataConsumer {
             return false;
         }
         if (result.getType().equals(HitResult.Type.MISS)) {
-            player.sendMessage(Text.translatable("craftus.ping.nothing"), true);
+            player.sendMessage(Text.translatable("chaosrig.api.ping.nothing"), true);
             return false;
         }
         if (pingAtCancel(result)) {
@@ -244,13 +262,31 @@ public class PingRenderer extends DataConsumer {
             return false;
         }
         if (result.getType() == HitResult.Type.MISS) {
-            player.sendMessage(Text.translatable("craftus.ping.nothing"), true);
+            player.sendMessage(Text.translatable("chaosrig.api.ping.nothing"), true);
             return false;
         }
         if (pingAtCancel(result)) {
             return false;
         }
         return add(result);
+    }
+
+    public boolean regroup() {
+        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+        if (player == null) {
+            ChaosRigApi.LOGGER.warn("[Regroup] 当前会话Player实例为null");
+            return false;
+        }
+        if (player.isSpectator()) {
+            return false;
+        }
+        ClientRegroupPingRecord ping = new ClientRegroupPingRecord(player, ServerChaosRigApiConfig.pingRegroupAliveMaxTick);
+        if (ChaosRigApiClient.isServerExist()) {
+            sendPingPacket(ping);
+        } else {
+            addAtArray(ping);
+        }
+        return true;
     }
 
     public boolean addByOthers(@NotNull HitResult result) {
@@ -263,7 +299,7 @@ public class PingRenderer extends DataConsumer {
             return false;
         }
         if (result.getType().equals(HitResult.Type.MISS)) {
-            player.sendMessage(Text.translatable("craftus.ping.nothing"), true);
+            player.sendMessage(Text.translatable("chaosrig.api.ping.nothing"), true);
             return false;
         }
         if (pingAtCancel(result)) {
@@ -278,7 +314,7 @@ public class PingRenderer extends DataConsumer {
         if (result instanceof EntityHitResult entityHitResult) {
             ClientPingRecord ping = new ClientEntityPingRecord(player, entityHitResult, ServerChaosRigApiConfig.pingEntityAliveDefaultMaxTick);
             if (ChaosRigApiClient.isServerExist()) sendPingPacket(ping);
-            else pings.stream().filter(ping::isSameType).findAny().ifPresentOrElse(oldPing -> PingRecord.copy(ping, oldPing), () -> pings.add(ping));
+            else addAtArray(ping);
             return true;
         }
         if (result instanceof BlockHitResult blockHitResult) {
@@ -287,10 +323,14 @@ public class PingRenderer extends DataConsumer {
                     ? new ClientBlockPingRecord(player, blockHitResult, ServerChaosRigApiConfig.pingBlockAliveMaxTick)
                     : new ClientPlacePingRecord(player, blockHitResult, ServerChaosRigApiConfig.pingLocationAliveMaxTick);
             if (ChaosRigApiClient.isServerExist()) sendPingPacket(ping);
-            else pings.stream().filter(ping::isSameType).findAny().ifPresentOrElse(oldPing -> PingRecord.copy(ping, oldPing), () -> pings.add(ping));
+            else addAtArray(ping);
             return true;
         }
         return false;
+    }
+
+    protected void addAtArray(@NotNull ClientPingRecord ping) {
+        pings.stream().filter(ping::isSameType).findAny().ifPresentOrElse(oldPing -> PingRecord.copy(ping, oldPing), () -> pings.add(ping));
     }
 
     public boolean pingAtCancel(@NotNull HitResult result) {
@@ -319,7 +359,7 @@ public class PingRenderer extends DataConsumer {
     }
 
     @Override
-    public final void syncData(@NotNull World world) {
+    public final void syncData(@Nullable World world) {
         throw new RuntimeException("客户端无需向服务器同步自身数据");
     }
 
@@ -334,7 +374,7 @@ public class PingRenderer extends DataConsumer {
     }
 
     @Override
-    public void tickUpdate(@NotNull World world) {
+    public void tickUpdate(@Nullable World world) {
         Iterator<ClientPingRecord> pingsIterator = pings.iterator();
         while (pingsIterator.hasNext()) {
             ClientPingRecord ping = pingsIterator.next();

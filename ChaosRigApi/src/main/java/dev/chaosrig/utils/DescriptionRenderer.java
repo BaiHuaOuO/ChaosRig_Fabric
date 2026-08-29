@@ -13,11 +13,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 @Environment(EnvType.CLIENT)
 public class DescriptionRenderer {
     @Nullable
-    protected Text description;
+    protected Supplier<Text> description;
     protected boolean lock = false;
     protected int textStep = 0;
     protected final int atY;
@@ -32,7 +33,7 @@ public class DescriptionRenderer {
         }
         client.getProfiler().push("preparing render description");
         TextRenderer fontRenderer = client.textRenderer;
-        String renderText = this.description.asTruncatedString(textStep);
+        String renderText = this.description.get().asTruncatedString(textStep);
         Window window = client.getWindow();
         int maxWidth = window.getScaledWidth() - 20;
         List<OrderedText> textList = fontRenderer.wrapLines(StringVisitable.plain(renderText), maxWidth);
@@ -62,12 +63,12 @@ public class DescriptionRenderer {
         if (this.description == null) {
             return;
         }
-        if (description.getString().length() > textStep) {
+        if (description.get().getString().length() > textStep) {
             this.textStep++;
         }
     }
 
-    public void push(@NotNull Text description) {
+    public void push(@NotNull Supplier<Text> description) {
         if (this.lock) {
             return;
         }
@@ -82,7 +83,7 @@ public class DescriptionRenderer {
         this.textStep = 0;
     }
 
-    protected void resetText(@NotNull Text description) {
+    protected void resetText(@NotNull Supplier<Text> description) {
         this.description = description;
         this.textStep = 0;
     }

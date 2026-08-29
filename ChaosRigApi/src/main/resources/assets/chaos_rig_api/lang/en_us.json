@@ -1,0 +1,5 @@
+{
+  "chaosrig.api.ping.camera.tip": "不允许自由视角下进行Ping标记",
+  "chaosrig.api.ping.nothing": "无事可报或距离过远",
+  "key.chaosrig.api.ping": "标记"
+}

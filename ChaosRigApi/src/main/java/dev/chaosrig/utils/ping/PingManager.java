@@ -53,6 +53,7 @@ public class PingManager extends DataConsumer {
                     m.addEntity(player, entity);
                 }
                 case BLOCK -> m.addBlock(player, buf.readBlockHitResult());
+                case REGROUP -> m.addRegroup(player);
                 default -> m.addPlace(player, buf.readBlockHitResult());
             }
         });
@@ -88,6 +89,10 @@ public class PingManager extends DataConsumer {
         this.add(sender, new PingRecord.EntityPingRecord(sender, new EntityHitResult(target)));
     }
 
+    public final void addRegroup(@NotNull LivingEntity sender) {
+        this.add(sender, new PingRecord.RegroupPingRecord(sender));
+    }
+
     public void add(@NotNull LivingEntity sender, PingRecord ping) {
         ServerWorld world = this.server.getWorld(sender.getWorld().getRegistryKey());
         if (world == null) return;
@@ -108,11 +113,14 @@ public class PingManager extends DataConsumer {
                 packetBuf.writeEnumSet(EnumSet.of(ping.type), PingRecord.Type.class);
                 packetBuf.writeInt(ping.tick);
                 packetBuf.writeInt(ping.maxTick);
-                if (ping.type == PingRecord.Type.ENTITY) {
-                    EntityHitResult result = (EntityHitResult) ping.hitResult;
-                    packetBuf.writeUuid(result.getEntity().getUuid());
-                } else {
-                    packetBuf.writeBlockHitResult((BlockHitResult) ping.hitResult);
+                switch (ping.type) {
+                    case ENTITY -> {
+                        EntityHitResult result = (EntityHitResult) ping.hitResult;
+                        packetBuf.writeUuid(result.getEntity().getUuid());
+                    }
+                    case BLOCK, LOCATION -> {
+                        packetBuf.writeBlockHitResult((BlockHitResult) ping.hitResult);
+                    }
                 }
             });
         }

@@ -4,7 +4,6 @@ import dev.chaosrig.utils.renderer.HudOverlay;
 import dev.chaosrig.utils.renderer.InformationScreen;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.Window;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

@@ -9,20 +9,22 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.*;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.world.ClientWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.ColorHelper;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.*;
 import net.minecraft.util.profiler.Profiler;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.EnumSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -39,11 +41,19 @@ public class OutlineRenderer {
     }
 
     public static void addBlock(@NotNull BlockPos position, int color, int maxTick) {
-        renderers.add(new BlockRenderer(position, maxTick, color));
+        renderers.add(new BlockOutlineRenderer(position, maxTick, color));
     }
 
     public static void removeBlock(@NotNull BlockPos position) {
-        renderers.removeIf(r -> r instanceof BlockRenderer blockRenderer && blockRenderer.position.equals(position));
+        renderers.removeIf(r -> r instanceof BlockOutlineRenderer blockOutlineRenderer && blockOutlineRenderer.position.equals(position));
+    }
+
+    public static void addEntity(@NotNull Vec3d pos, @NotNull Entity target, int maxTick) {
+        renderers.add(new EntityMdoelRenderer(pos, target, maxTick));
+    }
+
+    public static void removeEntity(@NotNull Entity entity) {
+        renderers.removeIf(r -> r instanceof EntityMdoelRenderer entityMdoelRenderer && entityMdoelRenderer.entity.getUuid().equals(entity.getUuid()));
     }
 
     protected static void render(WorldRenderContext context) {
@@ -95,11 +105,12 @@ public class OutlineRenderer {
         }
     }
 
-    public static class BlockRenderer extends Renderer {
+    @Environment(EnvType.CLIENT)
+    public static class BlockOutlineRenderer extends Renderer {
         protected final BlockPos position;
         protected final int color;
 
-        protected BlockRenderer(@NotNull BlockPos position, int maxTick, int color) {
+        public BlockOutlineRenderer(@NotNull BlockPos position, int maxTick, int color) {
             super(maxTick);
             this.position = position;
             this.color = color;
@@ -159,4 +170,56 @@ public class OutlineRenderer {
             RenderSystem.enableCull();
         }
     }
-}
+
+    @Environment(EnvType.CLIENT)
+    public static class EntityMdoelRenderer extends Renderer {
+        protected final Entity entity;
+        protected final Vec3d pos;
+        protected final float yaw;
+        public static final ModelPart.Cuboid CUBE = new ModelPart.Cuboid(0, 0, 0, 0, 0, 16, 16, 16, 0, 0, 0, false, 0, 0, EnumSet.allOf(Direction.class));
+
+        public EntityMdoelRenderer(Vec3d pos, Entity entity, int maxTick) {
+            super(maxTick);
+            this.entity = entity;
+            this.pos = pos;
+            this.yaw = entity.getYaw();
+        }
+
+        @Override
+        public void render(WorldRenderContext context, MatrixStack matrices, Profiler profiler) {
+            Frustum frustum = context.frustum();
+            if (!frustum.isVisible(new Box(BlockPos.ofFloored(pos)))) {
+                return;
+            }
+            MinecraftClient client = MinecraftClient.getInstance();
+            Vec3d camPos = context.camera().getPos();
+            VertexConsumerProvider vertexConsumers = context.consumers();
+            double x = pos.x - camPos.x;
+            double y = pos.y - camPos.y;
+            double z = pos.z - camPos.z;
+            profiler.push("starting to render");
+            matrices.push();
+            if (!this.entity.isInvisibleTo(client.player)) {
+                matrices.translate(x, y, z);
+                matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(this.entity.getYaw() - this.yaw));
+                profiler.push("rendering entity");
+                EntityRenderDispatcher entityRenderDispatcher = client.getEntityRenderDispatcher();
+                EntityRenderer<? super Entity> entityRenderer = entityRenderDispatcher.getRenderer(this.entity);
+                entityRenderer.render(this.entity, this.yaw, context.tickDelta(), matrices, layer -> {
+                    if (layer.getDrawMode().equals(VertexFormat.DrawMode.QUADS)) {
+                        return vertexConsumers.getBuffer(RenderLayer.getTextIntensitySeeThrough(entityRenderer.getTexture(this.entity)));
+                    } else {
+                        return MinecraftClient.getInstance().getBufferBuilders().getEffectVertexConsumers().getBuffer(layer);
+                    }
+                }, 15728880);
+            } else {
+                matrices.translate(x, y - 0.5, z);
+                matrices.scale(0.5f, 0.5f, 0.5f);
+                profiler.push("rendering cube");
+                int alpha = this.maxTick >= 0 ? (int) (MathHelper.clamp(Math.sin((Math.min(1.0f, (double) this.getTick() / this.maxTick) * Math.PI) / 2), 0, 1f) * 255) : 255;
+                CUBE.renderCuboid(matrices.peek(), vertexConsumers.getBuffer(RenderLayer.getTextBackgroundSeeThrough()), 15728880, OverlayTexture.DEFAULT_UV, 170, 170, 170, alpha);
+            }
+            matrices.pop();
+        }
+    }
+ }

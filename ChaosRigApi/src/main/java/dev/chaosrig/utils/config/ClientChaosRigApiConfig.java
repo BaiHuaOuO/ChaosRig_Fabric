@@ -12,28 +12,18 @@ public class ClientChaosRigApiConfig {
     public static final File FILE = new File("config/chaos_rig_client.json");
     public static final ConfigManager MANAGER = new ConfigManager(FILE);
 
-    @SyncFromServer(type = SyncType.Integer)
-    public static int pingMaxDistance;
-
-    public static float vhsBarrelAmount = 0.055f;
-    public static float vhsChromaAberration = 0.018f;
-    public static float vhsChromaEdge = 1.4f;
-    public static float vhsChromaSmear = 0.0009f;
-    public static float vhsTrackSpeed = 0.40f;
-    public static float vhsTrackWidth = 0.07f;
-    public static float vhsTrackJitter = 0.0020f;
-    public static float vhsTrackBright = 0f;
-    public static float vhsFlickerAmount = 0.035f;
-    public static float vhsScanlineStrength = 0.10f;
-    public static float vhsGrainStrength = 0.035f;
-    public static float vhsVignetteStrength = 0.18f;
-    public static float vhsOffsetIntensity = 0f;
-    public static float vhsNoiseIntensity = 0.0008f;
-    public static float vhsBlurNear = 0.9985f;
-    public static float vhsBlurFar = 0.9999f;
-    public static float vhsBlurRadius = 0.004f;
-    public static float vhsBlurSamples = 8.0f; // int recomment
-    public static float vhsMaxColorBlur = 0.85f;
+    /**
+     * Ping功能最大允许距离
+     */
+    @SyncFromServer(type = SyncType.Integer) public static int pingMaxDistance;
+    /**
+     * 团结之力最大容忍距离
+     */
+    @SyncFromServer(type = SyncType.Integer) public static int stayTogetherMaxDistance;
+    /**
+     * 团结之力机制启用
+     */
+    @SyncFromServer(type = SyncType.Boolean) public static boolean stayTogetherEnabled;
 
     public static void register() {
         if (ChaosRigApiClient.isInit()) {
@@ -61,6 +51,8 @@ public class ClientChaosRigApiConfig {
 
     public static void reset() {
         pingMaxDistance = ServerChaosRigApiConfig.pingMaxDistance;
+        stayTogetherMaxDistance = ServerChaosRigApiConfig.stayTogetherMaxDistance;
+        stayTogetherEnabled = ServerChaosRigApiConfig.stayTogetherEnabled;
     }
 
     public static void check() {

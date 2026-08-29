@@ -1,6 +1,8 @@
 package dev.chaosrig;
 
+import dev.chaosrig.gamefunc.StayTogetherRenderer;
 import dev.chaosrig.utils.KeyboardManager;
+import dev.chaosrig.utils.TooltipReader;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -12,6 +14,8 @@ public final class ChaosRigClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         KeyboardManager.register();
+        StayTogetherRenderer.register();
+        TooltipReader.register();
         init = true;
     }
 

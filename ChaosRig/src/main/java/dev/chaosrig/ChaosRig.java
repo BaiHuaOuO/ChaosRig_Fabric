@@ -2,7 +2,9 @@ package dev.chaosrig;
 
 import dev.chaosrig.block.ChaosRigBlocks;
 import dev.chaosrig.command.CraftUsCommands;
+import dev.chaosrig.gamefunc.StayTogetherManager;
 import dev.chaosrig.item.ChaosRigItems;
+import dev.chaosrig.utils.DamageTypes;
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +19,8 @@ public final class ChaosRig implements ModInitializer {
 		CraftUsCommands.register();
 		ChaosRigItems.register();
 		ChaosRigBlocks.register();
+		StayTogetherManager.register();
+		DamageTypes.register();
 		init = true;
 	}
 

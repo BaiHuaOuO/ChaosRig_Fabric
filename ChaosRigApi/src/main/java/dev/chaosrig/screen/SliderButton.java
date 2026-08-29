@@ -1,7 +1,6 @@
 package dev.chaosrig.screen;
 
 import dev.chaosrig.utils.ColorTools;
-import dev.chaosrig.utils.renderer.InformationScreen;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -43,7 +42,6 @@ public class SliderButton extends BaseButton implements SelectableScreen.LockEsc
         this.editBox.setText(String.valueOf(defaultValue));
         this.setMinValue(0);
         this.setMaxValue(1);
-        InformationScreen.push("editBoxText", -1, ColorTools.WHITE.apply(255), this.editBox::getText);
     }
 
     @Override
