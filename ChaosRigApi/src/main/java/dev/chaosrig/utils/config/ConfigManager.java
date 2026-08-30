@@ -1,6 +1,7 @@
 package dev.chaosrig.utils.config;
 
 import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
@@ -11,10 +12,7 @@ import net.minecraft.util.crash.CrashReport;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -32,7 +30,7 @@ public class ConfigManager {
     @NotNull
     public final ConfigWriter writer;
     @NotNull
-    protected final JsonObject data = new JsonObject();
+    protected JsonObject data = new JsonObject();
 
     public ConfigManager(@NotNull File file) {
         this.configFile = file;
@@ -43,6 +41,16 @@ public class ConfigManager {
                 this.configFile.createNewFile();
             } catch(IOException e) {
                 MinecraftClient.getInstance().setCrashReportSupplierAndAddDetails(CrashReport.create(e, "无法创建目标文件"));
+            }
+        }
+        if (file.exists()) {
+            try (JsonReader reader = new JsonReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+                JsonElement element = GSON.fromJson(reader, JsonElement.class);
+                if (element != null && element.isJsonObject()) {
+                    this.data = element.getAsJsonObject();
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
         this.reader = new ConfigReader(configFile, data);
@@ -166,13 +174,13 @@ public class ConfigManager {
 
         @Override
         public int onInteger(@NotNull String key, int value) {
-            return this.read(key, (json, name) -> (json.has(name) && json.isJsonPrimitive()) ? json.get(name).getAsInt() : value);
+            return this.read(key, (json, name) -> (json.has(name) && json.get(name).isJsonPrimitive()) ? json.get(name).getAsInt() : value);
         }
 
         @Override
         public int[] onInteger(@NotNull String key, int[] values) {
             return this.read(key, (json, name) -> {
-                if (!json.has(name) || !json.isJsonArray()) {
+                if (!json.has(name) || !json.get(name).isJsonArray()) {
                     return values;
                 }
                 JsonArray array = json.getAsJsonArray(name);
@@ -186,13 +194,13 @@ public class ConfigManager {
 
         @Override
         public long onLong(@NotNull String key, long value) {
-            return this.read(key, (json, name) -> (json.has(name) && json.isJsonPrimitive()) ? json.get(name).getAsLong() : value);
+            return this.read(key, (json, name) -> (json.has(name) && json.get(name).isJsonPrimitive()) ? json.get(name).getAsLong() : value);
         }
 
         @Override
         public long[] onLong(@NotNull String key, long[] values) {
             return this.read(key, (json, name) -> {
-                if (!json.has(name) || !json.isJsonArray()) {
+                if (!json.has(name) || !json.get(name).isJsonArray()) {
                     return values;
                 }
                 JsonArray array = json.getAsJsonArray(name);
@@ -206,13 +214,13 @@ public class ConfigManager {
 
         @Override
         public boolean onBoolean(@NotNull String key, boolean value) {
-            return this.read(key, (json, name) -> (json.has(name) && json.isJsonPrimitive()) ? json.get(name).getAsBoolean() : value);
+            return this.read(key, (json, name) -> (json.has(name) && json.get(name).isJsonPrimitive()) ? json.get(name).getAsBoolean() : value);
         }
 
         @Override
         public boolean[] onBoolean(@NotNull String key, boolean[] values) {
             return this.read(key, (json, name) -> {
-                if (!json.has(name) || !json.isJsonArray()) {
+                if (!json.has(name) || !json.get(name).isJsonArray()) {
                     return values;
                 }
                 JsonArray array = json.getAsJsonArray(name);
@@ -226,13 +234,13 @@ public class ConfigManager {
 
         @Override
         public double onDouble(@NotNull String key, double value) {
-            return this.read(key, (json, name) -> (json.has(name) && json.isJsonPrimitive()) ? json.get(name).getAsDouble() : value);
+            return this.read(key, (json, name) -> (json.has(name) && json.get(name).isJsonPrimitive()) ? json.get(name).getAsDouble() : value);
         }
 
         @Override
         public double[] onDouble(@NotNull String key, double[] values) {
             return this.read(key, (json, name) -> {
-                if (!json.has(name) || !json.isJsonArray()) {
+                if (!json.has(name) || !json.get(name).isJsonArray()) {
                     return values;
                 }
                 JsonArray array = json.getAsJsonArray(name);
@@ -246,18 +254,18 @@ public class ConfigManager {
 
         @Override
         public @NotNull JsonElement onJson(@NotNull String key, @NotNull JsonElement value) {
-            return this.read(key, (json, name) -> (json.has(name) && json.isJsonObject()) ? json.get(name).getAsJsonObject() : value);
+            return this.read(key, (json, name) -> (json.has(name) && json.get(name).isJsonObject()) ? json.get(name).getAsJsonObject() : value);
         }
 
         @Override
         public @NotNull String onString(@NotNull String key, @NotNull String value) {
-            return this.read(key, (json, name) -> (json.has(name) && json.isJsonPrimitive()) ? json.get(name).getAsString() : value);
+            return this.read(key, (json, name) -> (json.has(name) && json.get(name).isJsonPrimitive()) ? json.get(name).getAsString() : value);
         }
 
         @Override
         public @NotNull String[] onString(@NotNull String key, @NotNull String[] values) {
             return this.read(key, (json, name) -> {
-                if (!json.has(name) || !json.isJsonArray()) {
+                if (!json.has(name) || !json.get(name).isJsonArray()) {
                     return values;
                 }
                 JsonArray array = json.getAsJsonArray(name);

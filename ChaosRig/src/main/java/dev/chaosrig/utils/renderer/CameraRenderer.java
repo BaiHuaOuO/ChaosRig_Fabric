@@ -2,7 +2,6 @@ package dev.chaosrig.utils.renderer;
 
 import dev.chaosrig.utils.ColorTools;
 import dev.chaosrig.utils.KeyboardInput;
-import dev.chaosrig.utils.KeyboardManager;
 import dev.chaosrig.utils.Vec3dHelper;
 import dev.chaosrig.utils.ping.PingRenderer;
 import net.minecraft.client.MinecraftClient;

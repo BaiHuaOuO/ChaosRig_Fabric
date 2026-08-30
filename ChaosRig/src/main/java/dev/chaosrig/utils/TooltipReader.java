@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import dev.chaosrig.ChaosRigApi;
 import dev.chaosrig.ChaosRigClient;
-import dev.chaosrig.utils.renderer.InformationScreen;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.Block;

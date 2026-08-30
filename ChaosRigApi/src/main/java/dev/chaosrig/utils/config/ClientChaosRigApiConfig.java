@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
 import java.io.File;
 
 @Environment(EnvType.CLIENT)
-public class ClientChaosRigApiConfig {
+public class ClientChaosRigApiConfig implements AutoCloseable {
     public static final File FILE = new File("config/chaos_rig_client.json");
     public static final ConfigManager MANAGER = new ConfigManager(FILE);
 
@@ -57,5 +57,10 @@ public class ClientChaosRigApiConfig {
 
     public static void check() {
 
+    }
+
+    @Override
+    public void close() throws Exception {
+        MANAGER.close();
     }
 }

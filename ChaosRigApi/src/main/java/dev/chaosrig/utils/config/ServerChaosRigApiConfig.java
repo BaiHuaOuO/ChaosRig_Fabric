@@ -8,7 +8,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
-public class ServerChaosRigApiConfig {
+public class ServerChaosRigApiConfig implements AutoCloseable {
     public static final File FILE = new File("config/chaos_rig_server.json");
     public static final ConfigManager MANAGER = new ConfigManager(FILE);
     /**
@@ -144,6 +144,11 @@ public class ServerChaosRigApiConfig {
             ChaosRigApi.LOGGER.warn("[StayTogether]团结之力伤害延迟必须在区间[]");
             stayTogetherDamagingDelay = 3;
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        MANAGER.close();
     }
 }
 
